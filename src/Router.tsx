@@ -4,7 +4,6 @@ import { Cardapio } from "./paginas/Cardapio";
 import { Carrinho } from "./paginas/Carrinho";
 import { Garcom } from "./paginas/Garcom";
 import { Pedido } from "./paginas/Pedido";
-import Pedidos from "./paginas/Pedidos";
 
 export function Router() {
   return (
@@ -14,7 +13,7 @@ export function Router() {
       <Route path="/carrinho" element={<Carrinho />} />
       <Route path="/garcom" element={<Garcom />} />
       <Route path="/pedido" element={<Pedido />} />
-      <Route path="/pedidos" element={<Pedidos />} />
+      <Route path="/pedidos" element={<Pedido />} />
     </Routes>
   );
 } 
