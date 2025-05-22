@@ -2,9 +2,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: main
 
 jobs:
   frontend-tests:
@@ -20,9 +18,7 @@ jobs:
         node-version: '18'
 
     - name: Instalar dependências
-      run: |
-        npm install
+      run: npm ci
 
     - name: Rodar testes
-      run: |
-        npm test -- --watchAll=false
+      run: npm test
