@@ -4,7 +4,6 @@ import { Cardapio } from "./paginas/Cardapio";
 import { Carrinho } from "./paginas/Carrinho";
 import { Garcom } from "./paginas/Garcom";
 import { Pedido } from "./paginas/Pedido";
-// import Pedidos from "./paginas/Pedido";
 
 export function Router() {
   return (
