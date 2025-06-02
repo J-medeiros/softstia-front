@@ -4,6 +4,7 @@ import { Cardapio } from "./paginas/Cardapio";
 import { Carrinho } from "./paginas/Carrinho";
 import { Garcom } from "./paginas/Garcom";
 import { Pedido } from "./paginas/Pedido";
+import { ProdutosLista } from "./paginas/ProdutosList";
 
 export function Router() {
   return (
@@ -14,6 +15,7 @@ export function Router() {
       <Route path="/garcom" element={<Garcom />} />
       <Route path="/pedido" element={<Pedido />} />
       <Route path="/pedidos" element={<Pedido />} />
+      <Route path="/Produto" element={<ProdutosLista />} />
     </Routes>
   );
-} 
+}
