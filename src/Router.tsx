@@ -1,19 +1,26 @@
-import { Routes, Route } from "react-router-dom";
-import { Home } from "./paginas/Home";
-import { Cardapio } from "./paginas/Cardapio";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Carrinho } from "./paginas/Carrinho";
 import { Garcom } from "./paginas/Garcom";
-import { Pedido } from "./paginas/Pedido";
+import { Cardapio } from "./paginas/Cardapio";
+import Home from "./paginas/Home";
 
 export function Router() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/cardapio" element={<Cardapio />} />
-      <Route path="/carrinho" element={<Carrinho />} />
-      <Route path="/garcom" element={<Garcom />} />
-      <Route path="/pedido" element={<Pedido />} />
-      <Route path="/pedidos" element={<Pedido />} />
+      {/* Redireciona "/" para "/home" */}
+      <Route path="/" element={<Navigate to="/home" />} />
+
+      {/* Página inicial */}
+      <Route path="/home" element={<Home />} />
+
+      {/* Cardápio com número da mesa como parâmetro */}
+      <Route path="/cardapio/:numeroMesa" element={<Cardapio />} />
+
+      {/* Carrinho com número da mesa como parâmetro */}
+      <Route path="/carrinho/:numeroMesa" element={<Carrinho />} />
+
+      {/* Chamar garçom com número da mesa como parâmetro */}
+      <Route path="/garcom/:mesa" element={<Garcom />} />
     </Routes>
   );
-} 
+}
