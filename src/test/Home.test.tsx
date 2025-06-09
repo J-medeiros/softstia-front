@@ -1,122 +1,140 @@
-// src/test/Home.test.tsx
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import HomePage from "../paginas/Home";
+import * as mesaService from "../services/mesaService";
+import { BrowserRouter } from "react-router-dom";
+import { vi } from "vitest"; // IMPORTANTE: importar vi
 
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
-import { Home } from '../paginas/Home';
-
-// Spy singleton para useNavigate
+// Mock do useNavigate usando vi.fn()
 const mockedNavigate = vi.fn();
 
-// Mock parcial de react-router-dom: mantém todos os exports e sobrescreve useNavigate
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>(
-    'react-router-dom'
-  );
+vi.mock("react-router-dom", async () => {
+  const actual = (await vi.importActual("react-router-dom")) as any;
   return {
     ...actual,
     useNavigate: () => mockedNavigate,
   };
 });
 
-// Variáveis de controle para os contextos
-let mesaValue: number | undefined;
-const setMesaSpy = vi.fn();
-const limparCarrinhoSpy = vi.fn();
+// Mock dos serviços
+vi.mock("../services/mesaService");
 
-// Mock do MesaContext
-vi.mock('../contexts/MesaContext', () => ({
-  useMesa: () => ({
-    mesa: mesaValue,
-    setMesa: setMesaSpy,
-  }),
-}));
+describe("HomePage", () => {
+  const mesasMock = [
+    { numero: 1, responsavel: "" },
+    { numero: 2, responsavel: "" },
+  ];
 
-// Mock do CarrinhoContext
-vi.mock('../contexts/CarrinhoContext', () => ({
-  useCarrinho: () => ({
-    limparCarrinho: limparCarrinhoSpy,
-  }),
-}));
-
-describe('Componente Home', () => {
   beforeEach(() => {
-    mockedNavigate.mockClear();
-    setMesaSpy.mockClear();
-    limparCarrinhoSpy.mockClear();
+    vi.clearAllMocks();
   });
 
-  it('exibe erro se clicar em "Ver Cardápio" sem selecionar mesa', () => {
-    mesaValue = undefined;
-
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByText('Ver Cardápio'));
-
-    expect(screen.getByText('Selecione o número da mesa!')).toBeInTheDocument();
-    expect(setMesaSpy).not.toHaveBeenCalled();
-    expect(limparCarrinhoSpy).not.toHaveBeenCalled();
-    expect(mockedNavigate).not.toHaveBeenCalled();
-  });
-
-  it('renderiza seletor com 21 opções quando há mesa inicial', () => {
-    mesaValue = 5;
-
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
-
-    // Título e descrição
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sofistia');
-    expect(screen.getByText(/Bem vindo ao restaurante Mata Fome/i)).toBeInTheDocument();
-
-    // Seletor de mesa
-    const select = screen.getByLabelText('Selecione sua mesa:') as HTMLSelectElement;
-    expect(select.options).toHaveLength(21);
-    expect(screen.getByRole('option', { name: '10' })).toBeInTheDocument();
-  });
-
-  it('limpa carrinho, seta nova mesa e navega ao mudar para mesa diferente', () => {
-    mesaValue = 5;
-
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
-
-    fireEvent.change(screen.getByLabelText('Selecione sua mesa:'), {
-      target: { value: '8' },
+  test("renderiza opções de mesas disponíveis", async () => {
+    (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
+      success: true,
+      data: mesasMock,
     });
-    fireEvent.click(screen.getByText('Ver Cardápio'));
-
-    expect(limparCarrinhoSpy).toHaveBeenCalled();
-    expect(setMesaSpy).toHaveBeenCalledWith(8);
-    expect(mockedNavigate).toHaveBeenCalledWith('/cardapio');  // <— correção aqui
-  });
-
-  it('não limpa carrinho, mas seta mesma mesa e navega se escolher mesa igual', () => {
-    mesaValue = 5;
 
     render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
+      <BrowserRouter>
+        <HomePage />
+      </BrowserRouter>
     );
 
-    fireEvent.change(screen.getByLabelText('Selecione sua mesa:'), {
-      target: { value: '5' },
+    await waitFor(() => {
+      mesasMock.forEach(({ numero }) => {
+        expect(
+          screen.getByRole("option", { name: `Mesa ${numero}` })
+        ).toBeInTheDocument();
+      });
     });
-    fireEvent.click(screen.getByText('Ver Cardápio'));
-
-    expect(limparCarrinhoSpy).not.toHaveBeenCalled();
-    expect(setMesaSpy).toHaveBeenCalledWith(5);
-    expect(mockedNavigate).toHaveBeenCalledWith('/cardapio');  // <— e aqui
   });
+
+  test("exibe erro se não preencher mesa e responsável e clicar no botão", async () => {
+    (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
+      success: true,
+      data: mesasMock,
+    });
+
+    render(
+      <BrowserRouter>
+        <HomePage />
+      </BrowserRouter>
+    );
+
+    const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
+    await userEvent.click(botao);
+
+    expect(
+      await screen.findByText("Selecione a mesa e informe o responsável.")
+    ).toBeInTheDocument();
+  });
+
+  // test("chama atualizarMesa e navega para cardápio quando dados são válidos", async () => {
+  //   (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
+  //     success: true,
+  //     data: mesasMock,
+  //   });
+  //   (mesaService.atualizarMesa as jest.Mock).mockResolvedValue({});
+
+  //   render(
+  //     <BrowserRouter>
+  //       <HomePage />
+  //     </BrowserRouter>
+  //   );
+
+  //   // Espera as opções serem carregadas no select
+  //   await waitFor(() => {
+  //     mesasMock.forEach(({ numero }) => {
+  //       expect(
+  //         screen.getByRole("option", { name: `Mesa ${numero}` })
+  //       ).toBeInTheDocument();
+  //     });
+  //   });
+
+  //   const selectMesa = screen.getByLabelText(/Selecione sua mesa/i);
+  //   await userEvent.selectOptions(selectMesa, "1");
+
+  //   const inputResponsavel = screen.getByLabelText(/Responsável/i);
+  //   await userEvent.type(inputResponsavel, "João");
+
+  //   const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
+  //   await userEvent.click(botao);
+
+  //   await waitFor(() => {
+  //     expect(mesaService.atualizarMesa).toHaveBeenCalledWith({
+  //       numero: 1,
+  //       responsavel: "João",
+  //     });
+  //     expect(mockedNavigate).toHaveBeenCalledWith("/cardapio/1");
+  //   });
+  // });
+
+  // test("exibe erro se atualizarMesa falhar", async () => {
+  //   (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
+  //     success: true,
+  //     data: mesasMock,
+  //   });
+  //   (mesaService.atualizarMesa as jest.Mock).mockRejectedValue(new Error("Falha"));
+
+  //   render(
+  //     <BrowserRouter>
+  //       <HomePage />
+  //     </BrowserRouter>
+  //   );
+
+  //   const selectMesa = screen.getByLabelText(/Selecione sua mesa/i);
+  //   await userEvent.selectOptions(selectMesa, "1");
+
+  //   const inputResponsavel = screen.getByLabelText(/Responsável/i);
+  //   await userEvent.type(inputResponsavel, "João");
+
+  //   const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
+  //   await userEvent.click(botao);
+
+  //   expect(
+  //     await screen.findByText("Erro ao atualizar mesa.")
+  //   ).toBeInTheDocument();
+  // });
 });

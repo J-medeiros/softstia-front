@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 export function Garcom() {
   const navigate = useNavigate();
-  const { mesa } = useParams<{ mesa: string }>();
+  const { mesa } = useParams<{ mesa: string}>();
 
   const irParaCardapio = () => navigate(`/cardapio/${mesa}`);
 

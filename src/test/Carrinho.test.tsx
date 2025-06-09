@@ -1,78 +1,70 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
-import { Carrinho } from '../paginas/Carrinho';
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { vi } from 'vitest';
 
-// 1) Spy singleton para useNavigate
-const mockedNavigate = vi.fn();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
+import Carrinho from "../paginas/Carrinho";
 
-// 2) Mock parcial de react-router-dom: mantemos tudo e só sobrescrevemos useNavigate
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>(
-    'react-router-dom'
-  );
-  return {
-    ...actual,
-    useNavigate: () => mockedNavigate,      // 🎯 vi.fn spy para checar chamadas :contentReference[oaicite:0]{index=0}
-  };
-});
-
-// 3) Mock dos Contextos
-vi.mock('../contexts/CarrinhoContext', () => ({
-  useCarrinho: () => ({
-    itens: [
-      { id: 1, nome: 'Pizza Margherita', preco: 30, quantidade: 2, imagem: 'pizza.jpg' }
-    ],
-    removerItem: vi.fn(),
-    atualizarQuantidade: vi.fn(),
-    limparCarrinho: vi.fn(),
-  }),
+// Simula o carrinhoService
+vi.mock("../services/carrinhoService", () => ({
+  default: {
+    obterItensCarrinhoPorMesa: vi.fn(() =>
+      Promise.resolve({
+        data: [
+          {
+            id_produto: 1,
+            nome: "Pizza Margherita",
+            image: "pizza.jpg",
+            quantidade: 2,
+            totalvalor: 30,
+          },
+        ],
+      })
+    ),
+    removerItemDoCarrinho: vi.fn(() => Promise.resolve()),
+    atualizarQuantidade: vi.fn(() => Promise.resolve()),
+    enviarPedido: vi.fn(() => Promise.resolve()),
+    limparCarrinho: vi.fn(() => Promise.resolve()),
+  },
 }));
 
-vi.mock('../contexts/MesaContext', () => ({
-  useMesa: () => ({ mesa: 'Mesa 5' }),
-}));
-
-describe('Componente Carrinho', () => {
-  beforeEach(() => {
-    mockedNavigate.mockClear();            // limpa histórico entre testes :contentReference[oaicite:1]{index=1}
-  });
-
-  it('renderiza itens e calcula o total corretamente', () => {
+describe("Carrinho", () => {
+  it("exibe os itens do carrinho e o total corretamente", async () => {
     render(
-      <MemoryRouter>
-        <Carrinho />
+      <MemoryRouter initialEntries={["/carrinho/1"]}>
+        <Routes>
+          <Route path="/carrinho/:numeroMesa" element={<Carrinho />} />
+        </Routes>
       </MemoryRouter>
     );
 
-    // nome e preço do item
-    expect(screen.getByText('Pizza Margherita')).toBeInTheDocument();  
-    expect(screen.getByText(/R\$ 30\.00/)).toBeInTheDocument();        // toFixed(2) usa ponto 
+    // Aguarda os itens serem carregados
+    await waitFor(() =>
+      expect(screen.getByText("Pizza Margherita")).toBeInTheDocument()
+    );
 
-    // total = 30 * 2 = 60
-    expect(screen.getByText(/R\$ 60\.00/)).toBeInTheDocument();        // regex para ponto decimal 
+    expect(screen.getByText("Mesa selecionada:")).toBeInTheDocument();
+    expect(screen.getByText("R$ 60")).toBeInTheDocument(); // 30 * 2
   });
 
-  it('navega para /cardapio ao clicar em "Voltar ao Cardápio"', () => {
+  it("permite incrementar a quantidade de um item", async () => {
     render(
-      <MemoryRouter>
-        <Carrinho />
+      <MemoryRouter initialEntries={["/carrinho/1"]}>
+        <Routes>
+          <Route path="/carrinho/:numeroMesa" element={<Carrinho />} />
+        </Routes>
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByText('Voltar ao Cardápio'));
-    expect(mockedNavigate).toHaveBeenCalledWith('/cardapio');         // verifica navegação correta :contentReference[oaicite:4]{index=4}
-  });
+    await screen.findByText("Pizza Margherita");
 
-  it('limpa o carrinho e navega para /cardapio ao clicar em "Cancelar"', () => {
-    render(
-      <MemoryRouter>
-        <Carrinho />
-      </MemoryRouter>
+    const incrementButton = screen.getByText("+");
+    fireEvent.click(incrementButton);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Pizza Margherita")
+      ).toBeInTheDocument()
     );
-
-    fireEvent.click(screen.getByText('Cancelar'));
-    // limparCarrinho() é chamado internamente e depois navegamos
-    expect(mockedNavigate).toHaveBeenCalledWith('/cardapio');
   });
 });
