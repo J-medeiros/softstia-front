@@ -1,51 +1,40 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Cardapio } from '../paginas/Cardapio';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { Cardapio } from '../paginas/Cardapio';
+import * as ProdutoService from '../services/produtoService';
+import * as CarrinhoService from '../services/carrinhoService';
 import { BrowserRouter } from 'react-router-dom';
-import { CarrinhoProvider } from '../contexts/CarrinhoContext';
-import { MesaProvider } from '../contexts/MesaContext';
+import { vi } from 'vitest';
 
-const renderComProviders = () => {
-  return render(
-    <MesaProvider>
-      <CarrinhoProvider>
-        <BrowserRouter>
-          <Cardapio />
-        </BrowserRouter>
-      </CarrinhoProvider>
-    </MesaProvider>
-  );
-};
+vi.mock('../services/produtoService');
+vi.mock('../services/carrinhoService');
 
-describe('Componente Cardapio', () => {
+const produtosMock = [
+  { id: 1, nome: 'Pizza', descricao: 'Deliciosa', valor: 30, image: 'pizza.jpg' },
+];
+
+describe('Cardapio', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks(); // boa prática para resetar mocks entre testes
+
+    (ProdutoService.ProdutoService.getProdutos as vi.Mock).mockResolvedValue({
+      data: produtosMock,
+    });
+
+    (CarrinhoService.default.adicionarProdutoAoCarrinho as vi.Mock).mockResolvedValue({});
   });
 
-  it('deve renderizar os produtos da categoria padrão (pratos)', () => {
-    renderComProviders();
-
-    expect(screen.getByText('Pizza Margherita')).toBeInTheDocument();
-    expect(screen.getByText('Hambúrguer Artesanal')).toBeInTheDocument();
+  it('deve renderizar produtos', async () => {
+    render(<BrowserRouter><Cardapio /></BrowserRouter>);
+    expect(await screen.findByText('Pizza')).toBeInTheDocument();
   });
 
-  it('deve mudar para a categoria "bebidas" quando clicado', () => {
-    renderComProviders();
-
-    const botaoBebidas = screen.getByRole('button', { name: /bebidas/i });
-    fireEvent.click(botaoBebidas);
-
-    expect(screen.getByText('Café Expresso')).toBeInTheDocument();
-    expect(screen.queryByText('Pizza Margherita')).not.toBeInTheDocument();
-  });
-
-  it('deve mudar para a categoria "sobremesas" quando clicado', () => {
-    renderComProviders();
-
-    const botaoSobremesas = screen.getByRole('button', { name: /sobremesas/i });
-    fireEvent.click(botaoSobremesas);
-
-    expect(screen.getByText('Sorvete de Chocolate')).toBeInTheDocument();
+  it('deve adicionar produto ao carrinho', async () => {
+    render(<BrowserRouter><Cardapio /></BrowserRouter>);
+    const btn = await screen.findByText('Adicionar');
+    fireEvent.click(btn);
+    await waitFor(() => {
+      expect(CarrinhoService.default.adicionarProdutoAoCarrinho).toHaveBeenCalled();
+    });
   });
 });

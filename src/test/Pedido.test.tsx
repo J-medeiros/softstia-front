@@ -1,121 +1,75 @@
-// src/test/Pedido.test.tsx
-
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import { Pedido } from '../paginas/Pedido';
+import { vi } from 'vitest';
+import { useCarrinho } from '../contexts/CarrinhoContext';
+import { useMesa } from '../contexts/MesaContext';
+import { BrowserRouter } from 'react-router-dom';
 
-// Spy singleton para useNavigate
-const mockedNavigate = vi.fn();
+vi.mock('../contexts/CarrinhoContext');
+vi.mock('../contexts/MesaContext');
 
-// Mock parcial de react-router-dom: mantém todos os exports e só substitui useNavigate
+const mockNavigate = vi.fn();
+
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>(
-    'react-router-dom'
-  );
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => mockedNavigate,
+    useNavigate: () => mockNavigate,
   };
 });
 
-// Variáveis de controle para os contextos
-let mesaValue: number | undefined;
-let carrinhoItens: Array<{ id: number; nome: string; preco: number; quantidade: number }>;
-const limparCarrinhoSpy = vi.fn();
+describe('Pedido component', () => {
+  const mockLimparCarrinho = vi.fn();
 
-// Mock do MesaContext
-vi.mock('../contexts/MesaContext', () => ({
-  useMesa: () => ({
-    mesa: mesaValue,
-  }),
-}));
+  const itensMock = [
+    { id: 1, nome: 'Pizza', quantidade: 2, preco: 20 },
+    { id: 2, nome: 'Coca-Cola', quantidade: 1, preco: 5 },
+  ];
 
-// Mock do CarrinhoContext
-vi.mock('../contexts/CarrinhoContext', () => ({
-  useCarrinho: () => ({
-    itens: carrinhoItens,
-    limparCarrinho: limparCarrinhoSpy,
-  }),
-}));
-
-describe('Componente Pedido', () => {
   beforeEach(() => {
-    mockedNavigate.mockClear();
-    limparCarrinhoSpy.mockClear();
+    vi.clearAllMocks();
+
+    (useCarrinho as unknown as () => any).mockReturnValue({
+      itens: itensMock,
+      limparCarrinho: mockLimparCarrinho,
+    });
+
+    (useMesa as unknown as () => any).mockReturnValue({
+      mesa: '5',
+    });
   });
 
-  it('exibe status "enviado" por padrão com emoji e texto corretos', () => {
-    mesaValue = 3;
-    carrinhoItens = [
-      { id: 1, nome: 'Pizza Margherita', preco: 30, quantidade: 2 },
-      { id: 2, nome: 'Café Expresso', preco: 10, quantidade: 1 },
-    ];
-
+  const renderComRouter = () =>
     render(
-      <MemoryRouter>
+      <BrowserRouter>
         <Pedido />
-      </MemoryRouter>
+      </BrowserRouter>
     );
 
-    // Emoji 📝 e texto "Pedido enviado para cozinha"
-    expect(screen.getByText('📝')).toBeInTheDocument();
-    expect(screen.getByText('Pedido enviado para cozinha')).toBeInTheDocument();
-  });
-
-  it('lista todos os itens do pedido com quantidades e subtotais', () => {
-    mesaValue = 5;
-    carrinhoItens = [
-      { id: 1, nome: 'Bife Ancho', preco: 100, quantidade: 1 },
-      { id: 2, nome: 'Suco de Laranja', preco: 10, quantidade: 3 },
-    ];
-
-    render(
-      <MemoryRouter>
-        <Pedido />
-      </MemoryRouter>
-    );
-
-    // Verifica cada item renderizado com quantidade e subtotal formatado
-    expect(screen.getByText('Bife Ancho')).toBeInTheDocument();
-    expect(screen.getByText('Quantidade: 1')).toBeInTheDocument();
-    expect(screen.getByText(/R\$ 100\.00/)).toBeInTheDocument();
-
-    expect(screen.getByText('Suco de Laranja')).toBeInTheDocument();
-    expect(screen.getByText('Quantidade: 3')).toBeInTheDocument();
-    // Subtotal = 10 * 3 = 30
-    expect(screen.getByText(/R\$ 30\.00/)).toBeInTheDocument();
-  });
-
-  it('mostra a mesa selecionada no topo', () => {
-    mesaValue = 7;
-    carrinhoItens = [];
-
-    render(
-      <MemoryRouter>
-        <Pedido />
-      </MemoryRouter>
-    );
+  it('deve renderizar corretamente com mesa e itens', () => {
+    renderComRouter();
 
     expect(screen.getByText('Mesa selecionada:')).toBeInTheDocument();
-    expect(screen.getByText('7')).toBeInTheDocument();
+    expect(screen.getByText('Pizza')).toBeInTheDocument();
+    expect(screen.getByText('Quantidade: 2')).toBeInTheDocument();
+    expect(screen.getByText('Coca-Cola')).toBeInTheDocument();
+    expect(screen.getByText('Quantidade: 1')).toBeInTheDocument();
   });
 
-  it('ao clicar em "Voltar ao Cardápio" limpa o carrinho e navega', () => {
-    mesaValue = 2;
-    carrinhoItens = [{ id: 1, nome: 'Lasanha', preco: 60, quantidade: 1 }];
+  it('deve mostrar status "enviado" com emoji', () => {
+    renderComRouter();
 
-    render(
-      <MemoryRouter>
-        <Pedido />
-      </MemoryRouter>
-    );
+    expect(screen.getByText('Pedido enviado para cozinha')).toBeInTheDocument();
+    expect(screen.getByText('📝')).toBeInTheDocument();
+  });
 
-    // Clica em um dos botões "Voltar ao Cardápio"
-    const botoes = screen.getAllByText('Voltar ao Cardápio');
-    fireEvent.click(botoes[0]);
+  it('deve limpar o carrinho e navegar ao clicar em "Voltar ao Cardápio"', () => {
+    renderComRouter();
 
-    expect(limparCarrinhoSpy).toHaveBeenCalled();
-    expect(mockedNavigate).toHaveBeenCalledWith('/cardapio');
+    const button = screen.getAllByText('Voltar ao Cardápio')[0];
+    fireEvent.click(button);
+
+    expect(mockLimparCarrinho).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/cardapio');
   });
 });

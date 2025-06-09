@@ -4,7 +4,7 @@ import { ProdutoCarrinho } from '../models/types';
 
 const API_URL = 'https://sofistia-back-end.onrender.com/api/crud-carrinho.php';
 
-const obterItensCarrinhoPorMesa = async (mesa: number) => {
+export const obterItensCarrinhoPorMesa = async (mesa: number) => {
   const res = await axios.get(`${API_URL}?mesa=${mesa}`);
   return res.data || [];
 };
@@ -43,14 +43,13 @@ const removerItem = async (id_produto: number, mesa: number) => {
 const removerItemDoCarrinho = async (id_produto: number, id_mesa: number) => {
   return axios.delete(`${API_URL}?id_produto=${id_produto}&id_mesa=${id_mesa}`);
 };
-
-const limparCarrinho = async (id: number, mesa: number) => {
+ const limparCarrinho = async (id: number, mesa: number) => {
   return axios.delete('https://sofistia-back-end.onrender.com/api/crud-carrinho.php', {
     data: { id, mesa },
   });
 };
 
-const CarrinhoService = {
+export const CarrinhoService = {
   obterItensCarrinhoPorMesa,
   adicionarProdutoAoCarrinho,
   atualizarQuantidade,
