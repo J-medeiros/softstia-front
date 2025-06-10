@@ -1,140 +1,87 @@
-import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import HomePage from "../paginas/Home";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+import HomePage from "../paginas/Home"; // ajuste se o caminho for diferente
+import { MemoryRouter } from "react-router-dom";
 import * as mesaService from "../services/mesaService";
-import { BrowserRouter } from "react-router-dom";
-import { vi } from "vitest"; // IMPORTANTE: importar vi
 
-// Mock do useNavigate usando vi.fn()
-const mockedNavigate = vi.fn();
-
+// Mock do useNavigate
+const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
-  const actual = (await vi.importActual("react-router-dom")) as any;
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
   return {
     ...actual,
-    useNavigate: () => mockedNavigate,
+    useNavigate: () => mockNavigate,
   };
 });
 
-// Mock dos serviços
-vi.mock("../services/mesaService");
+// Mock da API
+const mesasMock = [
+  { numero: 1, responsavel: "" },
+  { numero: 2, responsavel: "" },
+];
 
 describe("HomePage", () => {
-  const mesasMock = [
-    { numero: 1, responsavel: "" },
-    { numero: 2, responsavel: "" },
-  ];
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  test("renderiza opções de mesas disponíveis", async () => {
-    (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
-      success: true,
-      data: mesasMock,
-    });
+  it("deve listar as mesas disponíveis ao carregar a página", async () => {
+    vi.spyOn(mesaService, "listarMesasDisponiveis").mockResolvedValue(mesasMock);
 
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <HomePage />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
-      mesasMock.forEach(({ numero }) => {
-        expect(
-          screen.getByRole("option", { name: `Mesa ${numero}` })
-        ).toBeInTheDocument();
-      });
+      expect(screen.getByText("Mesa 1")).toBeInTheDocument();
+      expect(screen.getByText("Mesa 2")).toBeInTheDocument();
     });
   });
 
-  test("exibe erro se não preencher mesa e responsável e clicar no botão", async () => {
-    (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
-      success: true,
-      data: mesasMock,
-    });
+  it("deve mostrar erro se clicar sem selecionar mesa e responsável", async () => {
+    vi.spyOn(mesaService, "listarMesasDisponiveis").mockResolvedValue(mesasMock);
 
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <HomePage />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
-    const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
-    await userEvent.click(botao);
+    const botao = screen.getByText("Ir para Cardápio");
+    fireEvent.click(botao);
 
-    expect(
-      await screen.findByText("Selecione a mesa e informe o responsável.")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Selecione a mesa e informe o responsável.")).toBeInTheDocument();
   });
 
-  // test("chama atualizarMesa e navega para cardápio quando dados são válidos", async () => {
-  //   (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
-  //     success: true,
-  //     data: mesasMock,
-  //   });
-  //   (mesaService.atualizarMesa as jest.Mock).mockResolvedValue({});
+  it("deve atualizar a mesa e navegar para o cardápio", async () => {
+    vi.spyOn(mesaService, "listarMesasDisponiveis").mockResolvedValue(mesasMock);
+    const atualizarMesaMock = vi.spyOn(mesaService, "atualizarMesa").mockResolvedValue({ numero: 1, responsavel: "João" });
 
-  //   render(
-  //     <BrowserRouter>
-  //       <HomePage />
-  //     </BrowserRouter>
-  //   );
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
-  //   // Espera as opções serem carregadas no select
-  //   await waitFor(() => {
-  //     mesasMock.forEach(({ numero }) => {
-  //       expect(
-  //         screen.getByRole("option", { name: `Mesa ${numero}` })
-  //       ).toBeInTheDocument();
-  //     });
-  //   });
+    await waitFor(() => {
+      expect(screen.getByText("Mesa 1")).toBeInTheDocument();
+    });
 
-  //   const selectMesa = screen.getByLabelText(/Selecione sua mesa/i);
-  //   await userEvent.selectOptions(selectMesa, "1");
+    fireEvent.change(screen.getByLabelText("Selecione sua mesa:"), {
+      target: { value: "1" },
+    });
 
-  //   const inputResponsavel = screen.getByLabelText(/Responsável/i);
-  //   await userEvent.type(inputResponsavel, "João");
+    fireEvent.change(screen.getByLabelText("Responsável:"), {
+      target: { value: "João" },
+    });
 
-  //   const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
-  //   await userEvent.click(botao);
+    fireEvent.click(screen.getByText("Ir para Cardápio"));
 
-  //   await waitFor(() => {
-  //     expect(mesaService.atualizarMesa).toHaveBeenCalledWith({
-  //       numero: 1,
-  //       responsavel: "João",
-  //     });
-  //     expect(mockedNavigate).toHaveBeenCalledWith("/cardapio/1");
-  //   });
-  // });
-
-  // test("exibe erro se atualizarMesa falhar", async () => {
-  //   (mesaService.listarMesasDisponiveis as jest.Mock).mockResolvedValue({
-  //     success: true,
-  //     data: mesasMock,
-  //   });
-  //   (mesaService.atualizarMesa as jest.Mock).mockRejectedValue(new Error("Falha"));
-
-  //   render(
-  //     <BrowserRouter>
-  //       <HomePage />
-  //     </BrowserRouter>
-  //   );
-
-  //   const selectMesa = screen.getByLabelText(/Selecione sua mesa/i);
-  //   await userEvent.selectOptions(selectMesa, "1");
-
-  //   const inputResponsavel = screen.getByLabelText(/Responsável/i);
-  //   await userEvent.type(inputResponsavel, "João");
-
-  //   const botao = screen.getByRole("button", { name: /Ir para Cardápio/i });
-  //   await userEvent.click(botao);
-
-  //   expect(
-  //     await screen.findByText("Erro ao atualizar mesa.")
-  //   ).toBeInTheDocument();
-  // });
+    await waitFor(() => {
+      expect(atualizarMesaMock).toHaveBeenCalledWith({ numero: 1, responsavel: "João" });
+      expect(mockNavigate).toHaveBeenCalledWith("/cardapio/1");
+    });
+  });
 });

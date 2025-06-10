@@ -1,4 +1,3 @@
-import React from "react";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listarMesasDisponiveis, atualizarMesa } from '../services/mesaService';
@@ -18,7 +17,7 @@ const HomePage = () => {
   const carregarMesas = async () => {
     try {
       const res = await listarMesasDisponiveis();
-      if (res.success && res.data) {
+      if (res && res) {
         setMesasDisponiveis(res.data);
       } else {
         setMesasDisponiveis([]);

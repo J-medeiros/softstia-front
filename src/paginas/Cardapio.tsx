@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Produto } from "../models/types";
 import { ProdutoService } from "../services/produtoService";
-import CarrinhoService from "../services/carrinhoService";
+import { CarrinhoService } from "../services/carrinhoService";
 import { chamarGarcomApi } from "../services/garcomService";
 
 
@@ -25,8 +25,6 @@ useEffect(() => {
     console.error("Erro ao buscar produtos:", error);
   });
 }, []);
-
-
 
 
   const adicionarAoCarrinho = (produto: Produto) => {

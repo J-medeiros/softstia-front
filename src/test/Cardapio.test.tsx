@@ -4,7 +4,7 @@ import { Cardapio } from '../paginas/Cardapio';
 import * as ProdutoService from '../services/produtoService';
 import * as CarrinhoService from '../services/carrinhoService';
 import { BrowserRouter } from 'react-router-dom';
-import { vi } from 'vitest';
+import { vi, Mock } from 'vitest';
 
 vi.mock('../services/produtoService');
 vi.mock('../services/carrinhoService');
@@ -15,13 +15,12 @@ const produtosMock = [
 
 describe('Cardapio', () => {
   beforeEach(() => {
-    vi.restoreAllMocks(); // boa prática para resetar mocks entre testes
+    vi.restoreAllMocks();
 
-    (ProdutoService.ProdutoService.getProdutos as vi.Mock).mockResolvedValue({
-      data: produtosMock,
-    });
+    // Corrigir aqui: retornar apenas o array
+    (ProdutoService.ProdutoService.getProdutos as Mock).mockResolvedValue(produtosMock);
 
-    (CarrinhoService.default.adicionarProdutoAoCarrinho as vi.Mock).mockResolvedValue({});
+    (CarrinhoService.default.adicionarProdutoAoCarrinho as Mock).mockResolvedValue({});
   });
 
   it('deve renderizar produtos', async () => {
