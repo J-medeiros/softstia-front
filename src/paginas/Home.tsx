@@ -42,7 +42,6 @@ const HomePage = () => {
 
     try {
       await atualizarMesa(mesaAtualizada);
-      alert('Mesa atualizada com sucesso!');
       await carregarMesas();
       setMesaSelecionada(null);
       setResponsavel('');
