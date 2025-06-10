@@ -15,8 +15,8 @@ export const Cardapio: React.FC = () => {
 
 useEffect(() => {
   ProdutoService.getProdutos().then((response) => {
-    if (response && Array.isArray(response)) {
-      setProdutos(response);
+    if (response && Array.isArray(response.data)) {
+      setProdutos(response.data);
     } else {
       console.error("Erro: `data` não é um array!", response);
       setProdutos([]); // Define um array vazio para evitar erro de `.map()`
@@ -25,8 +25,6 @@ useEffect(() => {
     console.error("Erro ao buscar produtos:", error);
   });
 }, []);
-
-
 
 
   const adicionarAoCarrinho = (produto: Produto) => {

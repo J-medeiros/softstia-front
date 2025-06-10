@@ -45,7 +45,7 @@ const removerItem = async (id_produto: number, mesa: number) => {
 };
 
 const removerItemDoCarrinho = async (id_produto: number, id_mesa: number) => {
-  return axios.delete(`${CARRINHO_URL}?id_produto=${id_produto}&id_mesa=${id_mesa}`);
+  return axios.delete(CARRINHO_URL, { data: { mesa: id_mesa, id: id_produto } });
 };
 
 const limparCarrinho = async (id: number, mesa: number) => {

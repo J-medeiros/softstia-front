@@ -10,8 +10,11 @@ export async function listarMesasDisponiveis(): Promise<Mesa[]> {
   return response.data;
 }
 
-// Atualiza o responsável pela mesa
-export async function atualizarMesa(mesa: Mesa): Promise<Mesa> {
-  const response = await axios.put(apiUrl, mesa);
+// Atualiza o responsável pela mesa// mesaService.ts
+export async function atualizarMesa(id: number, responsavel: string): Promise<Mesa> {
+  const response = await axios.put(apiUrl, {
+    id,
+    responsavel,
+  });
   return response.data;
 }

@@ -19,7 +19,7 @@ export const Carrinho: React.FC = () => {
     buscarItensCarrinho();
   }, [buscarItensCarrinho]);
 
-  const removerItem = (id_produto: number) => {
+   const removerItem = (id_produto: number) => {
     CarrinhoService.removerItemDoCarrinho(id_produto, Number(numeroMesa))
       .then(() => buscarItensCarrinho())
       .catch((error) => console.error("Erro ao remover item:", error));
