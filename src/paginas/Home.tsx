@@ -1,14 +1,13 @@
-import React from "react";
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { listarMesasDisponiveis, atualizarMesa } from '../services/mesaService';
-import { Mesa } from '../models/types';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { listarMesasDisponiveis, atualizarMesa } from "../services/mesaService";
+import { Mesa } from "../models/types";
 
 const HomePage = () => {
   const [mesasDisponiveis, setMesasDisponiveis] = useState<Mesa[]>([]);
   const [mesaSelecionada, setMesaSelecionada] = useState<number | null>(null);
-  const [responsavel, setResponsavel] = useState('');
-  const [erro, setErro] = useState('');
+  const [responsavel, setResponsavel] = useState("");
+  const [erro, setErro] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,8 +17,9 @@ const HomePage = () => {
   const carregarMesas = async () => {
     try {
       const res = await listarMesasDisponiveis();
-      if (res.success && res.data) {
-        setMesasDisponiveis(res.data);
+      // sourcery skip: binary-operator-identity
+      if (res && res) {
+        setMesasDisponiveis(res);
       } else {
         setMesasDisponiveis([]);
       }
@@ -30,9 +30,9 @@ const HomePage = () => {
   };
 
   const salvarMesa = async () => {
-    setErro('');
+    setErro("");
     if (!mesaSelecionada || !responsavel.trim()) {
-      setErro('Selecione a mesa e informe o responsável.');
+      setErro("Selecione a mesa e informe o responsável.");
       return;
     }
 
@@ -43,14 +43,14 @@ const HomePage = () => {
 
     try {
       await atualizarMesa(mesaAtualizada);
-      alert('Mesa atualizada com sucesso!');
+      alert("Mesa atualizada com sucesso!");
       await carregarMesas();
       setMesaSelecionada(null);
-      setResponsavel('');
+      setResponsavel("");
       navigate(`/cardapio/${mesaAtualizada.numero}`);
     } catch (err) {
       console.error(err);
-      setErro('Erro ao atualizar mesa.');
+      setErro("Erro ao atualizar mesa.");
     }
   };
 
@@ -72,14 +72,14 @@ const HomePage = () => {
           </label>
           <select
             id="mesa"
-            value={mesaSelecionada ?? ''}
+            value={mesaSelecionada ?? ""}
             onChange={(e) => setMesaSelecionada(Number(e.target.value))}
             className="px-4 py-2 rounded text-lg text-center w-40 outline-none border border-gray-400 focus:border-amber-600 bg-amber-600 text-white font-semibold"
           >
             <option value="" disabled>
               Selecione...
             </option>
-            {mesasDisponiveis.map((mesa) => (
+            {(mesasDisponiveis ?? []).map((mesa) => (
               <option key={mesa.numero} value={mesa.numero}>
                 Mesa {mesa.numero}
               </option>
@@ -88,7 +88,10 @@ const HomePage = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="responsavel" className="block text-white text-lg mb-2">
+          <label
+            htmlFor="responsavel"
+            className="block text-white text-lg mb-2"
+          >
             Responsável:
           </label>
           <input

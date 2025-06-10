@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CarrinhoService from "../services/carrinhoService";
 import { ProdutoCarrinho } from "../models/types";
@@ -9,15 +9,15 @@ export const Carrinho: React.FC = () => {
   const [itens, setItens] = useState<ProdutoCarrinho[]>([]);
   const [pedidoFinalizado, setPedidoFinalizado] = useState(false);
 
-  useEffect(() => {
-    buscarItensCarrinho();
-  }, []);
-
-  const buscarItensCarrinho = () => {
+  const buscarItensCarrinho = useCallback(() => {
     CarrinhoService.obterItensCarrinhoPorMesa(Number(numeroMesa))
       .then((res) => setItens(res.data || []))
       .catch((error) => console.error("Erro ao buscar carrinho:", error));
-  };
+  }, [numeroMesa]);
+
+  useEffect(() => {
+    buscarItensCarrinho();
+  }, [buscarItensCarrinho]);
 
   const removerItem = (id_produto: number) => {
     CarrinhoService.removerItemDoCarrinho(id_produto, Number(numeroMesa))
@@ -155,7 +155,7 @@ export const Carrinho: React.FC = () => {
           <div className="flex gap-4">
             <button
               onClick={() =>
-                CarrinhoService.limparCarrinho(idproduto, Number(numeroMesa))
+                CarrinhoService.limparCarrinho(0, Number(numeroMesa))
               }
               className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg transition"
             >

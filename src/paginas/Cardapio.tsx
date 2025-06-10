@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Produto } from "../models/types";
 import { ProdutoService } from "../services/produtoService";
-import CarrinhoService from "../services/carrinhoService";
+import { CarrinhoService } from "../services/carrinhoService";
 import { chamarGarcomApi } from "../services/garcomService";
 
 
@@ -15,8 +15,8 @@ export const Cardapio: React.FC = () => {
 
 useEffect(() => {
   ProdutoService.getProdutos().then((response) => {
-    if (response && Array.isArray(response.data)) {
-      setProdutos(response.data);
+    if (response && Array.isArray(response)) {
+      setProdutos(response);
     } else {
       console.error("Erro: `data` não é um array!", response);
       setProdutos([]); // Define um array vazio para evitar erro de `.map()`

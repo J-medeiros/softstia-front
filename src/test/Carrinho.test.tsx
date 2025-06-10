@@ -1,10 +1,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { vi } from 'vitest';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Carrinho from "../paginas/Carrinho";
-
+import { vi } from "vitest";
 // Simula o carrinhoService
 vi.mock("../services/carrinhoService", () => ({
   default: {
@@ -62,9 +59,7 @@ describe("Carrinho", () => {
     fireEvent.click(incrementButton);
 
     await waitFor(() =>
-      expect(
-        screen.getByText("Pizza Margherita")
-      ).toBeInTheDocument()
+      expect(screen.getByText("Pizza Margherita")).toBeInTheDocument()
     );
   });
 });

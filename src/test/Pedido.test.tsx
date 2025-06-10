@@ -29,12 +29,13 @@ describe('Pedido component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (useCarrinho as unknown as () => any).mockReturnValue({
+
+    (useCarrinho as unknown as jest.Mock).mockReturnValue({
       itens: itensMock,
       limparCarrinho: mockLimparCarrinho,
     });
 
-    (useMesa as unknown as () => any).mockReturnValue({
+    (useMesa as unknown as jest.Mock).mockReturnValue({
       mesa: '5',
     });
   });

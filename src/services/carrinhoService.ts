@@ -1,11 +1,15 @@
-// src/services/carrinhoService.ts
 import axios from 'axios';
 import { ProdutoCarrinho } from '../models/types';
 
-const API_URL = 'https://sofistia-back-end.onrender.com/api/crud-carrinho.php';
+// URL base da API
+const API_BASE = 'https://sofistia-back-end.onrender.com/api';
+
+// Endpoints específicos
+const CARRINHO_URL = `${API_BASE}/crud-carrinho.php`;
+const PEDIDO_URL = `${API_BASE}/crud-pedido.php`;
 
 export const obterItensCarrinhoPorMesa = async (mesa: number) => {
-  const res = await axios.get(`${API_URL}?mesa=${mesa}`);
+  const res = await axios.get(`${CARRINHO_URL}?mesa=${mesa}`);
   return res.data || [];
 };
 
@@ -15,7 +19,7 @@ const adicionarProdutoAoCarrinho = async (
   mesa: number,
   totalvalor: number,
 ) => {
-  return axios.post(API_URL, {
+  return axios.post(CARRINHO_URL, {
     id_produto,
     quantidade,
     mesa,
@@ -29,22 +33,23 @@ const atualizarQuantidade = async (item: ProdutoCarrinho, mesa: number) => {
     mesa,
     quantidade: item.quantidade,
   };
-  return axios.put(API_URL, body);
+  return axios.put(CARRINHO_URL, body);
 };
 
 const removerItem = async (id_produto: number, mesa: number) => {
   return axios.request({
     method: 'delete',
-    url: API_URL,
+    url: CARRINHO_URL,
     data: { id_produto, mesa },
   });
 };
 
 const removerItemDoCarrinho = async (id_produto: number, id_mesa: number) => {
-  return axios.delete(`${API_URL}?id_produto=${id_produto}&id_mesa=${id_mesa}`);
+  return axios.delete(`${CARRINHO_URL}?id_produto=${id_produto}&id_mesa=${id_mesa}`);
 };
- const limparCarrinho = async (id: number, mesa: number) => {
-  return axios.delete('https://sofistia-back-end.onrender.com/api/crud-carrinho.php', {
+
+const limparCarrinho = async (id: number, mesa: number) => {
+  return axios.delete(CARRINHO_URL, {
     data: { id, mesa },
   });
 };
@@ -58,9 +63,9 @@ export const CarrinhoService = {
   limparCarrinho,
   enviarPedido,
 };
+
 export async function enviarPedido(idproduto: number, numeroMesa: number) {
-  const url = 'https://sofistia-back-end.onrender.com/api/crud-pedido.php';
-  return axios.post(url, {
+  return axios.post(PEDIDO_URL, {
     idproduto,
     numeroMesa,
   });
