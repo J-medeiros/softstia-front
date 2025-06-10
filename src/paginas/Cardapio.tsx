@@ -44,18 +44,17 @@ useEffect(() => {
           [produto.id]: (prev[produto.id] || 0) + 1,
         }));
       })
-      .catch(() => alert("Erro ao adicionar ao carrinho"));
+      .catch(() => console.error("Erro ao adicionar ao carrinho"));
   };
 
 const chamarGarcom = () => {
   const mesa = numeroMesa ?? "1";
   chamarGarcomApi(mesa)
     .then(() => {
-      alert("Garçom chamado com sucesso!");
       navigate(`/garcom/${mesa}`);
     })
     .catch(() => {
-      alert("Erro ao chamar o garçom");
+      console.error("Erro ao chamar o garçom");
     });
 };
 
